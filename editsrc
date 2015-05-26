@@ -1,0 +1,62 @@
+#!/bin/perl
+use Switch;
+
+# maf stands for 'Make add file', it
+# adds a c file to be compiled
+sub maf {
+    my($file_name) = @_;
+    open(my $makefile, '<', 'Makefile')
+	or die "Unable to open makefile, $!";
+
+    my $file_contents = "";
+    while(<$makefile>) {
+	$file_contents .= $_;
+	if ($_ eq "SRC_FILES = \\\n") {
+	    $file_contents .= "\t" . $file_name . " \\\n";
+	}
+	if($_ eq "\t" . $file_name . " \\\n") {
+	    print "File already added\n";
+	    exit 1;
+	}
+    }
+    open(my $makefile, '>', 'Makefile')
+      or die "Can't write to makefile: $!";
+    print $makefile $file_contents;
+    close $makefile;
+}
+
+# mrf stands for 'Make remove file', it
+# removes a c file from the source code
+# list so it isn't compiled
+sub mrf {
+    my($file_name) = @_;
+    open(my $makefile, '<', 'Makefile')
+	or die "Unable to open makefile, $!";
+
+    my $file_contents = "";
+    while(<$makefile>) {
+	if($_ ne "\t" . $file_name . " \\\n") {
+	    $file_contents .= $_;
+	}
+    }
+    open(my $makefile, '>', 'Makefile')
+      or die "Can't write to makefile: $!";
+    print $makefile $file_contents;
+    close $makefile;
+}
+
+$arg_num = $#ARGV + 1;
+$current_arg = 0;
+while($current_arg < $arg_num) {
+    switch($ARGV[$current_arg]) {
+	case "-maf" { 
+	    maf($ARGV[$current_arg + 1]);
+	    ++$current_arg;
+	}
+	case "-mrf" { 
+	    mrf($ARGV[$current_arg + 1]);
+	    ++$current_arg;
+	}
+    }
+    ++$current_arg;
+}
